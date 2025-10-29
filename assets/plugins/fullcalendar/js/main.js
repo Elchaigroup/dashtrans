@@ -779,9 +779,9 @@ var FullCalendar = (function (exports) {
         }
         return null;
     }
-    function expandRecurring(eventStore, framingRange, context) {
+    function expandRecurring(eventCenter, framingRange, context) {
         var dateEnv = context.dateEnv, pluginHooks = context.pluginHooks, options = context.options;
-        var defs = eventStore.defs, instances = eventStore.instances;
+        var defs = eventCenter.defs, instances = eventCenter.instances;
         // remove existing recurring instances
         // TODO: bad. always expand events as a second step
         instances = filterHash(instances, function (instance) {
@@ -1812,64 +1812,64 @@ var FullCalendar = (function (exports) {
     }
 
     function parseEvents(rawEvents, eventSource, context, allowOpenRange) {
-        var eventStore = createEmptyEventStore();
+        var eventCenter = createEmptyEventCenter();
         var eventRefiners = buildEventRefiners(context);
         for (var _i = 0, rawEvents_1 = rawEvents; _i < rawEvents_1.length; _i++) {
             var rawEvent = rawEvents_1[_i];
             var tuple = parseEvent(rawEvent, eventSource, context, allowOpenRange, eventRefiners);
             if (tuple) {
-                eventTupleToStore(tuple, eventStore);
+                eventTupleToCenter(tuple, eventCenter);
             }
         }
-        return eventStore;
+        return eventCenter;
     }
-    function eventTupleToStore(tuple, eventStore) {
-        if (eventStore === void 0) { eventStore = createEmptyEventStore(); }
-        eventStore.defs[tuple.def.defId] = tuple.def;
+    function eventTupleToCenter(tuple, eventCenter) {
+        if (eventCenter === void 0) { eventCenter = createEmptyEventCenter(); }
+        eventCenter.defs[tuple.def.defId] = tuple.def;
         if (tuple.instance) {
-            eventStore.instances[tuple.instance.instanceId] = tuple.instance;
+            eventCenter.instances[tuple.instance.instanceId] = tuple.instance;
         }
-        return eventStore;
+        return eventCenter;
     }
     // retrieves events that have the same groupId as the instance specified by `instanceId`
     // or they are the same as the instance.
-    // why might instanceId not be in the store? an event from another calendar?
-    function getRelevantEvents(eventStore, instanceId) {
-        var instance = eventStore.instances[instanceId];
+    // why might instanceId not be in the Center? an event from another calendar?
+    function getRelevantEvents(eventCenter, instanceId) {
+        var instance = eventCenter.instances[instanceId];
         if (instance) {
-            var def_1 = eventStore.defs[instance.defId];
+            var def_1 = eventCenter.defs[instance.defId];
             // get events/instances with same group
-            var newStore = filterEventStoreDefs(eventStore, function (lookDef) {
+            var newCenter = filterEventCenterDefs(eventCenter, function (lookDef) {
                 return isEventDefsGrouped(def_1, lookDef);
             });
             // add the original
-            // TODO: wish we could use eventTupleToStore or something like it
-            newStore.defs[def_1.defId] = def_1;
-            newStore.instances[instance.instanceId] = instance;
-            return newStore;
+            // TODO: wish we could use eventTupleToCenter or something like it
+            newCenter.defs[def_1.defId] = def_1;
+            newCenter.instances[instance.instanceId] = instance;
+            return newCenter;
         }
-        return createEmptyEventStore();
+        return createEmptyEventCenter();
     }
     function isEventDefsGrouped(def0, def1) {
         return Boolean(def0.groupId && def0.groupId === def1.groupId);
     }
-    function createEmptyEventStore() {
+    function createEmptyEventCenter() {
         return { defs: {}, instances: {} };
     }
-    function mergeEventStores(store0, store1) {
+    function mergeEventCenters(Center0, Center1) {
         return {
-            defs: __assign(__assign({}, store0.defs), store1.defs),
-            instances: __assign(__assign({}, store0.instances), store1.instances)
+            defs: __assign(__assign({}, Center0.defs), Center1.defs),
+            instances: __assign(__assign({}, Center0.instances), Center1.instances)
         };
     }
-    function filterEventStoreDefs(eventStore, filterFunc) {
-        var defs = filterHash(eventStore.defs, filterFunc);
-        var instances = filterHash(eventStore.instances, function (instance) {
+    function filterEventCenterDefs(eventCenter, filterFunc) {
+        var defs = filterHash(eventCenter.defs, filterFunc);
+        var instances = filterHash(eventCenter.instances, function (instance) {
             return defs[instance.defId]; // still exists?
         });
         return { defs: defs, instances: instances };
     }
-    function excludeSubEventStore(master, sub) {
+    function excludeSubEventCenter(master, sub) {
         var defs = master.defs, instances = master.instances;
         var filteredDefs = {};
         var filteredInstances = {};
@@ -2274,15 +2274,15 @@ var FullCalendar = (function (exports) {
     /*
     Specifying nextDayThreshold signals that all-day ranges should be sliced.
     */
-    function sliceEventStore(eventStore, eventUiBases, framingRange, nextDayThreshold) {
+    function sliceEventCenter(eventCenter, eventUiBases, framingRange, nextDayThreshold) {
         var inverseBgByGroupId = {};
         var inverseBgByDefId = {};
         var defByGroupId = {};
         var bgRanges = [];
         var fgRanges = [];
-        var eventUis = compileEventUis(eventStore.defs, eventUiBases);
-        for (var defId in eventStore.defs) {
-            var def = eventStore.defs[defId];
+        var eventUis = compileEventUis(eventCenter.defs, eventUiBases);
+        for (var defId in eventCenter.defs) {
+            var def = eventCenter.defs[defId];
             var ui = eventUis[def.defId];
             if (ui.display === 'inverse-background') {
                 if (def.groupId) {
@@ -2296,9 +2296,9 @@ var FullCalendar = (function (exports) {
                 }
             }
         }
-        for (var instanceId in eventStore.instances) {
-            var instance = eventStore.instances[instanceId];
-            var def = eventStore.defs[instance.defId];
+        for (var instanceId in eventCenter.instances) {
+            var instance = eventCenter.instances[instanceId];
+            var def = eventCenter.defs[instance.defId];
             var ui = eventUis[def.defId];
             var origRange = instance.range;
             var normalRange = (!def.allDay && nextDayThreshold) ?
@@ -2349,7 +2349,7 @@ var FullCalendar = (function (exports) {
             for (var _a = 0, invertedRanges_2 = invertedRanges; _a < invertedRanges_2.length; _a++) {
                 var invertedRange = invertedRanges_2[_a];
                 bgRanges.push({
-                    def: eventStore.defs[defId],
+                    def: eventCenter.defs[defId],
                     ui: eventUis[defId],
                     instance: null,
                     range: invertedRange,
@@ -2631,16 +2631,16 @@ var FullCalendar = (function (exports) {
         return end;
     }
 
-    // applies the mutation to ALL defs/instances within the event store
-    function applyMutationToEventStore(eventStore, eventConfigBase, mutation, context) {
-        var eventConfigs = compileEventUis(eventStore.defs, eventConfigBase);
-        var dest = createEmptyEventStore();
-        for (var defId in eventStore.defs) {
-            var def = eventStore.defs[defId];
+    // applies the mutation to ALL defs/instances within the event Center
+    function applyMutationToEventCenter(eventCenter, eventConfigBase, mutation, context) {
+        var eventConfigs = compileEventUis(eventCenter.defs, eventConfigBase);
+        var dest = createEmptyEventCenter();
+        for (var defId in eventCenter.defs) {
+            var def = eventCenter.defs[defId];
             dest.defs[defId] = applyMutationToEventDef(def, eventConfigs[defId], mutation, context);
         }
-        for (var instanceId in eventStore.instances) {
-            var instance = eventStore.instances[instanceId];
+        for (var instanceId in eventCenter.instances) {
+            var instance = eventCenter.instances[instanceId];
             var def = dest.defs[instance.defId]; // important to grab the newly modified def
             dest.instances[instanceId] = applyMutationToEventInstance(instance, def, eventConfigs[instance.defId], mutation, context);
         }
@@ -3118,10 +3118,10 @@ var FullCalendar = (function (exports) {
                 var instance = eventInput._instance;
                 var currentData = this.getCurrentData();
                 // not already present? don't want to add an old snapshot
-                if (!currentData.eventStore.defs[def.defId]) {
+                if (!currentData.eventCenter.defs[def.defId]) {
                     this.dispatch({
                         type: 'ADD_EVENTS',
-                        eventStore: eventTupleToStore({ def: def, instance: instance }) // TODO: better util for two args?
+                        eventCenter: eventTupleToCenter({ def: def, instance: instance }) // TODO: better util for two args?
                     });
                     this.triggerEventAdd(eventInput);
                 }
@@ -3152,7 +3152,7 @@ var FullCalendar = (function (exports) {
                 var newEventApi = new EventApi(state, tuple.def, tuple.def.recurringDef ? null : tuple.instance);
                 this.dispatch({
                     type: 'ADD_EVENTS',
-                    eventStore: eventTupleToStore(tuple)
+                    eventCenter: eventTupleToCenter(tuple)
                 });
                 this.triggerEventAdd(newEventApi);
                 return newEventApi;
@@ -3168,7 +3168,7 @@ var FullCalendar = (function (exports) {
                 revert: function () {
                     _this.dispatch({
                         type: 'REMOVE_EVENTS',
-                        eventStore: eventApiToStore(eventApi)
+                        eventCenter: eventApiToCenter(eventApi)
                     });
                 }
             });
@@ -3176,7 +3176,7 @@ var FullCalendar = (function (exports) {
         // TODO: optimize
         CalendarApi.prototype.getEventById = function (id) {
             var state = this.getCurrentData();
-            var _a = state.eventStore, defs = _a.defs, instances = _a.instances;
+            var _a = state.eventCenter, defs = _a.defs, instances = _a.instances;
             id = String(id);
             for (var defId in defs) {
                 var def = defs[defId];
@@ -3198,7 +3198,7 @@ var FullCalendar = (function (exports) {
         };
         CalendarApi.prototype.getEvents = function () {
             var currentData = this.getCurrentData();
-            return buildEventApis(currentData.eventStore, currentData);
+            return buildEventApis(currentData.eventCenter, currentData);
         };
         CalendarApi.prototype.removeAllEvents = function () {
             this.dispatch({ type: 'REMOVE_ALL_EVENTS' });
@@ -3432,8 +3432,8 @@ var FullCalendar = (function (exports) {
             if (instance) {
                 var def = this._def;
                 var context_1 = this._context;
-                var eventStore = context_1.getCurrentData().eventStore;
-                var relevantEvents_1 = getRelevantEvents(eventStore, instance.instanceId);
+                var eventCenter = context_1.getCurrentData().eventCenter;
+                var relevantEvents_1 = getRelevantEvents(eventCenter, instance.instanceId);
                 var eventConfigBase = {
                     '': {
                         display: '',
@@ -3448,13 +3448,13 @@ var FullCalendar = (function (exports) {
                         classNames: []
                     }
                 };
-                relevantEvents_1 = applyMutationToEventStore(relevantEvents_1, eventConfigBase, mutation, context_1);
+                relevantEvents_1 = applyMutationToEventCenter(relevantEvents_1, eventConfigBase, mutation, context_1);
                 var oldEvent = new EventApi(context_1, def, instance); // snapshot
                 this._def = relevantEvents_1.defs[def.defId];
                 this._instance = relevantEvents_1.instances[instance.instanceId];
                 context_1.dispatch({
                     type: 'MERGE_EVENTS',
-                    eventStore: relevantEvents_1
+                    eventCenter: relevantEvents_1
                 });
                 context_1.emitter.trigger('eventChange', {
                     oldEvent: oldEvent,
@@ -3463,7 +3463,7 @@ var FullCalendar = (function (exports) {
                     revert: function () {
                         context_1.dispatch({
                             type: 'REMOVE_EVENTS',
-                            eventStore: relevantEvents_1
+                            eventCenter: relevantEvents_1
                         });
                     }
                 });
@@ -3471,10 +3471,10 @@ var FullCalendar = (function (exports) {
         };
         EventApi.prototype.remove = function () {
             var context = this._context;
-            var asStore = eventApiToStore(this);
+            var asCenter = eventApiToCenter(this);
             context.dispatch({
                 type: 'REMOVE_EVENTS',
-                eventStore: asStore
+                eventCenter: asCenter
             });
             context.emitter.trigger('eventRemove', {
                 event: this,
@@ -3482,7 +3482,7 @@ var FullCalendar = (function (exports) {
                 revert: function () {
                     context.dispatch({
                         type: 'MERGE_EVENTS',
-                        eventStore: asStore
+                        eventCenter: asCenter
                     });
                 }
             });
@@ -3689,7 +3689,7 @@ var FullCalendar = (function (exports) {
         };
         return EventApi;
     }());
-    function eventApiToStore(eventApi) {
+    function eventApiToCenter(eventApi) {
         var _a, _b;
         var def = eventApi._def;
         var instance = eventApi._instance;
@@ -3699,8 +3699,8 @@ var FullCalendar = (function (exports) {
                 ? (_b = {}, _b[instance.instanceId] = instance, _b) : {}
         };
     }
-    function buildEventApis(eventStore, context, excludeInstance) {
-        var defs = eventStore.defs, instances = eventStore.instances;
+    function buildEventApis(eventCenter, context, excludeInstance) {
+        var defs = eventCenter.defs, instances = eventCenter.instances;
         var eventApis = [];
         var excludeInstanceId = excludeInstance ? excludeInstance.instanceId : '';
         for (var id in instances) {
@@ -4321,12 +4321,12 @@ var FullCalendar = (function (exports) {
         return possible;
     }
 
-    var EMPTY_EVENT_STORE = createEmptyEventStore(); // for purecomponents. TODO: keep elsewhere
+    var EMPTY_EVENT_Center = createEmptyEventCenter(); // for purecomponents. TODO: keep elsewhere
     var Splitter = /** @class */ (function () {
         function Splitter() {
             this.getKeysForEventDefs = memoize(this._getKeysForEventDefs);
             this.splitDateSelection = memoize(this._splitDateSpan);
-            this.splitEventStore = memoize(this._splitEventStore);
+            this.splitEventCenter = memoize(this._splitEventCenter);
             this.splitIndividualUi = memoize(this._splitIndividualUi);
             this.splitEventDrag = memoize(this._splitInteraction);
             this.splitEventResize = memoize(this._splitInteraction);
@@ -4335,10 +4335,10 @@ var FullCalendar = (function (exports) {
         Splitter.prototype.splitProps = function (props) {
             var _this = this;
             var keyInfos = this.getKeyInfo(props);
-            var defKeys = this.getKeysForEventDefs(props.eventStore);
+            var defKeys = this.getKeysForEventDefs(props.eventCenter);
             var dateSelections = this.splitDateSelection(props.dateSelection);
             var individualUi = this.splitIndividualUi(props.eventUiBases, defKeys); // the individual *bases*
-            var eventStores = this.splitEventStore(props.eventStore, defKeys);
+            var eventCenters = this.splitEventCenter(props.eventCenter, defKeys);
             var eventDrags = this.splitEventDrag(props.eventDrag);
             var eventResizes = this.splitEventResize(props.eventResize);
             var splitProps = {};
@@ -4347,14 +4347,14 @@ var FullCalendar = (function (exports) {
             });
             for (var key in keyInfos) {
                 var keyInfo = keyInfos[key];
-                var eventStore = eventStores[key] || EMPTY_EVENT_STORE;
+                var eventCenter = eventCenters[key] || EMPTY_EVENT_Center;
                 var buildEventUi = this.eventUiBuilders[key];
                 splitProps[key] = {
                     businessHours: keyInfo.businessHours || props.businessHours,
                     dateSelection: dateSelections[key] || null,
-                    eventStore: eventStore,
+                    eventCenter: eventCenter,
                     eventUiBases: buildEventUi(props.eventUiBases[''], keyInfo.ui, individualUi[key]),
-                    eventSelection: eventStore.instances[props.eventSelection] ? props.eventSelection : '',
+                    eventSelection: eventCenter.instances[props.eventSelection] ? props.eventSelection : '',
                     eventDrag: eventDrags[key] || null,
                     eventResize: eventResizes[key] || null
                 };
@@ -4372,34 +4372,34 @@ var FullCalendar = (function (exports) {
             }
             return dateSpans;
         };
-        Splitter.prototype._getKeysForEventDefs = function (eventStore) {
+        Splitter.prototype._getKeysForEventDefs = function (eventCenter) {
             var _this = this;
-            return mapHash(eventStore.defs, function (eventDef) {
+            return mapHash(eventCenter.defs, function (eventDef) {
                 return _this.getKeysForEventDef(eventDef);
             });
         };
-        Splitter.prototype._splitEventStore = function (eventStore, defKeys) {
-            var defs = eventStore.defs, instances = eventStore.instances;
-            var splitStores = {};
+        Splitter.prototype._splitEventCenter = function (eventCenter, defKeys) {
+            var defs = eventCenter.defs, instances = eventCenter.instances;
+            var splitCenters = {};
             for (var defId in defs) {
                 for (var _i = 0, _a = defKeys[defId]; _i < _a.length; _i++) {
                     var key = _a[_i];
-                    if (!splitStores[key]) {
-                        splitStores[key] = createEmptyEventStore();
+                    if (!splitCenters[key]) {
+                        splitCenters[key] = createEmptyEventCenter();
                     }
-                    splitStores[key].defs[defId] = defs[defId];
+                    splitCenters[key].defs[defId] = defs[defId];
                 }
             }
             for (var instanceId in instances) {
                 var instance = instances[instanceId];
                 for (var _b = 0, _c = defKeys[instance.defId]; _b < _c.length; _b++) {
                     var key = _c[_b];
-                    if (splitStores[key]) { // must have already been created
-                        splitStores[key].instances[instanceId] = instance;
+                    if (splitCenters[key]) { // must have already been created
+                        splitCenters[key].instances[instanceId] = instance;
                     }
                 }
             }
-            return splitStores;
+            return splitCenters;
         };
         Splitter.prototype._splitIndividualUi = function (eventUiBases, defKeys) {
             var splitHashes = {};
@@ -4419,24 +4419,24 @@ var FullCalendar = (function (exports) {
         Splitter.prototype._splitInteraction = function (interaction) {
             var splitStates = {};
             if (interaction) {
-                var affectedStores_1 = this._splitEventStore(interaction.affectedEvents, this._getKeysForEventDefs(interaction.affectedEvents) // can't use cached. might be events from other calendar
+                var affectedCenters_1 = this._splitEventCenter(interaction.affectedEvents, this._getKeysForEventDefs(interaction.affectedEvents) // can't use cached. might be events from other calendar
                 );
                 // can't rely on defKeys because event data is mutated
                 var mutatedKeysByDefId = this._getKeysForEventDefs(interaction.mutatedEvents);
-                var mutatedStores_1 = this._splitEventStore(interaction.mutatedEvents, mutatedKeysByDefId);
+                var mutatedCenters_1 = this._splitEventCenter(interaction.mutatedEvents, mutatedKeysByDefId);
                 var populate = function (key) {
                     if (!splitStates[key]) {
                         splitStates[key] = {
-                            affectedEvents: affectedStores_1[key] || EMPTY_EVENT_STORE,
-                            mutatedEvents: mutatedStores_1[key] || EMPTY_EVENT_STORE,
+                            affectedEvents: affectedCenters_1[key] || EMPTY_EVENT_Center,
+                            mutatedEvents: mutatedCenters_1[key] || EMPTY_EVENT_Center,
                             isEvent: interaction.isEvent
                         };
                     }
                 };
-                for (var key in affectedStores_1) {
+                for (var key in affectedCenters_1) {
                     populate(key);
                 }
-                for (var key in mutatedStores_1) {
+                for (var key in mutatedCenters_1) {
                     populate(key);
                 }
             }
@@ -5105,40 +5105,40 @@ var FullCalendar = (function (exports) {
         }
     }
 
-    function reduceEventStore(eventStore, action, eventSources, dateProfile, context) {
+    function reduceEventCenter(eventCenter, action, eventSources, dateProfile, context) {
         switch (action.type) {
             case 'RECEIVE_EVENTS': // raw
-                return receiveRawEvents(eventStore, eventSources[action.sourceId], action.fetchId, action.fetchRange, action.rawEvents, context);
+                return receiveRawEvents(eventCenter, eventSources[action.sourceId], action.fetchId, action.fetchRange, action.rawEvents, context);
             case 'ADD_EVENTS': // already parsed, but not expanded
-                return addEvent(eventStore, action.eventStore, // new ones
+                return addEvent(eventCenter, action.eventCenter, // new ones
                 dateProfile ? dateProfile.activeRange : null, context);
             case 'MERGE_EVENTS': // already parsed and expanded
-                return mergeEventStores(eventStore, action.eventStore);
+                return mergeEventCenters(eventCenter, action.eventCenter);
             case 'PREV': // TODO: how do we track all actions that affect dateProfile :(
             case 'NEXT':
             case 'CHANGE_DATE':
             case 'CHANGE_VIEW_TYPE':
                 if (dateProfile) {
-                    return expandRecurring(eventStore, dateProfile.activeRange, context);
+                    return expandRecurring(eventCenter, dateProfile.activeRange, context);
                 }
                 else {
-                    return eventStore;
+                    return eventCenter;
                 }
             case 'REMOVE_EVENTS':
-                return excludeSubEventStore(eventStore, action.eventStore);
+                return excludeSubEventCenter(eventCenter, action.eventCenter);
             case 'REMOVE_EVENT_SOURCE':
-                return excludeEventsBySourceId(eventStore, action.sourceId);
+                return excludeEventsBySourceId(eventCenter, action.sourceId);
             case 'REMOVE_ALL_EVENT_SOURCES':
-                return filterEventStoreDefs(eventStore, function (eventDef) {
+                return filterEventCenterDefs(eventCenter, function (eventDef) {
                     return !eventDef.sourceId; // only keep events with no source id
                 });
             case 'REMOVE_ALL_EVENTS':
-                return createEmptyEventStore();
+                return createEmptyEventCenter();
             default:
-                return eventStore;
+                return eventCenter;
         }
     }
-    function receiveRawEvents(eventStore, eventSource, fetchId, fetchRange, rawEvents, context) {
+    function receiveRawEvents(eventCenter, eventSource, fetchId, fetchRange, rawEvents, context) {
         if (eventSource && // not already removed
             fetchId === eventSource.latestFetchId // TODO: wish this logic was always in event-sources
         ) {
@@ -5146,9 +5146,9 @@ var FullCalendar = (function (exports) {
             if (fetchRange) {
                 subset = expandRecurring(subset, fetchRange, context);
             }
-            return mergeEventStores(excludeEventsBySourceId(eventStore, eventSource.sourceId), subset);
+            return mergeEventCenters(excludeEventsBySourceId(eventCenter, eventSource.sourceId), subset);
         }
-        return eventStore;
+        return eventCenter;
     }
     function transformRawEvents(rawEvents, eventSource, context) {
         var calEachTransform = context.options.eventDataTransform;
@@ -5181,15 +5181,15 @@ var FullCalendar = (function (exports) {
         }
         return refinedEvents;
     }
-    function addEvent(eventStore, subset, expandRange, context) {
+    function addEvent(eventCenter, subset, expandRange, context) {
         if (expandRange) {
             subset = expandRecurring(subset, expandRange, context);
         }
-        return mergeEventStores(eventStore, subset);
+        return mergeEventCenters(eventCenter, subset);
     }
-    function rezoneEventStoreDates(eventStore, oldDateEnv, newDateEnv) {
-        var defs = eventStore.defs;
-        var instances = mapHash(eventStore.instances, function (instance) {
+    function rezoneEventCenterDates(eventCenter, oldDateEnv, newDateEnv) {
+        var defs = eventCenter.defs;
+        var instances = mapHash(eventCenter.instances, function (instance) {
             var def = defs[instance.defId];
             if (def.allDay || def.recurringDef) {
                 return instance; // isn't dependent on timezone
@@ -5203,16 +5203,16 @@ var FullCalendar = (function (exports) {
         });
         return { defs: defs, instances: instances };
     }
-    function excludeEventsBySourceId(eventStore, sourceId) {
-        return filterEventStoreDefs(eventStore, function (eventDef) {
+    function excludeEventsBySourceId(eventCenter, sourceId) {
+        return filterEventCenterDefs(eventCenter, function (eventDef) {
             return eventDef.sourceId !== sourceId;
         });
     }
     // QUESTION: why not just return instances? do a general object-property-exclusion util
-    function excludeInstances(eventStore, removals) {
+    function excludeInstances(eventCenter, removals) {
         return {
-            defs: eventStore.defs,
-            instances: filterHash(eventStore.instances, function (instance) {
+            defs: eventCenter.defs,
+            instances: filterHash(eventCenter.instances, function (instance) {
                 return !removals[instance.instanceId];
             })
         };
@@ -5228,7 +5228,7 @@ var FullCalendar = (function (exports) {
     }
     function isNewPropsValid(newProps, context) {
         var calendarState = context.getCurrentData();
-        var props = __assign({ businessHours: calendarState.businessHours, dateSelection: '', eventStore: calendarState.eventStore, eventUiBases: calendarState.eventUiBases, eventSelection: '', eventDrag: null, eventResize: null }, newProps);
+        var props = __assign({ businessHours: calendarState.businessHours, dateSelection: '', eventCenter: calendarState.eventCenter, eventUiBases: calendarState.eventUiBases, eventSelection: '', eventDrag: null, eventResize: null }, newProps);
         return (context.pluginHooks.isPropsValid || isPropsValid)(props, context);
     }
     function isPropsValid(state, context, dateSpanMeta, filterConfig) {
@@ -5246,9 +5246,9 @@ var FullCalendar = (function (exports) {
     function isInteractionPropsValid(state, context, dateSpanMeta, filterConfig) {
         var currentState = context.getCurrentData();
         var interaction = state.eventDrag; // HACK: the eventDrag props is used for ALL interactions
-        var subjectEventStore = interaction.mutatedEvents;
-        var subjectDefs = subjectEventStore.defs;
-        var subjectInstances = subjectEventStore.instances;
+        var subjectEventCenter = interaction.mutatedEvents;
+        var subjectDefs = subjectEventCenter.defs;
+        var subjectInstances = subjectEventCenter.instances;
         var subjectConfigs = compileEventUis(subjectDefs, interaction.isEvent ?
             state.eventUiBases :
             { '': currentState.selectionConfig } // if not a real event, validate as a selection
@@ -5256,9 +5256,9 @@ var FullCalendar = (function (exports) {
         if (filterConfig) {
             subjectConfigs = mapHash(subjectConfigs, filterConfig);
         }
-        var otherEventStore = excludeInstances(state.eventStore, interaction.affectedEvents.instances); // exclude the subject events. TODO: exclude defs too?
-        var otherDefs = otherEventStore.defs;
-        var otherInstances = otherEventStore.instances;
+        var otherEventCenter = excludeInstances(state.eventCenter, interaction.affectedEvents.instances); // exclude the subject events. TODO: exclude defs too?
+        var otherDefs = otherEventCenter.defs;
+        var otherInstances = otherEventCenter.instances;
         var otherConfigs = compileEventUis(otherDefs, state.eventUiBases);
         for (var subjectInstanceId in subjectInstances) {
             var subjectInstance = subjectInstances[subjectInstanceId];
@@ -5266,7 +5266,7 @@ var FullCalendar = (function (exports) {
             var subjectConfig = subjectConfigs[subjectInstance.defId];
             var subjectDef = subjectDefs[subjectInstance.defId];
             // constraint
-            if (!allConstraintsPass(subjectConfig.constraints, subjectRange, otherEventStore, state.businessHours, context)) {
+            if (!allConstraintsPass(subjectConfig.constraints, subjectRange, otherEventCenter, state.businessHours, context)) {
                 return false;
             }
             // overlap
@@ -5292,12 +5292,12 @@ var FullCalendar = (function (exports) {
                 }
             }
             // allow (a function)
-            var calendarEventStore = currentState.eventStore; // need global-to-calendar, not local to component (splittable)state
+            var calendarEventCenter = currentState.eventCenter; // need global-to-calendar, not local to component (splittable)state
             for (var _i = 0, _a = subjectConfig.allows; _i < _a.length; _i++) {
                 var subjectAllow = _a[_i];
                 var subjectDateSpan = __assign(__assign({}, dateSpanMeta), { range: subjectInstance.range, allDay: subjectDef.allDay });
-                var origDef = calendarEventStore.defs[subjectDef.defId];
-                var origInstance = calendarEventStore.instances[subjectInstanceId];
+                var origDef = calendarEventCenter.defs[subjectDef.defId];
+                var origInstance = calendarEventCenter.instances[subjectInstanceId];
                 var eventApi = void 0;
                 if (origDef) { // was previously in the calendar
                     eventApi = new EventApi(context, origDef, origInstance);
@@ -5315,9 +5315,9 @@ var FullCalendar = (function (exports) {
     // Date Selection Validation
     // ------------------------------------------------------------------------------------------------------------------------
     function isDateSelectionPropsValid(state, context, dateSpanMeta, filterConfig) {
-        var relevantEventStore = state.eventStore;
-        var relevantDefs = relevantEventStore.defs;
-        var relevantInstances = relevantEventStore.instances;
+        var relevantEventCenter = state.eventCenter;
+        var relevantDefs = relevantEventCenter.defs;
+        var relevantInstances = relevantEventCenter.instances;
         var selection = state.dateSelection;
         var selectionRange = selection.range;
         var selectionConfig = context.getCurrentData().selectionConfig;
@@ -5325,7 +5325,7 @@ var FullCalendar = (function (exports) {
             selectionConfig = filterConfig(selectionConfig);
         }
         // constraint
-        if (!allConstraintsPass(selectionConfig.constraints, selectionRange, relevantEventStore, state.businessHours, context)) {
+        if (!allConstraintsPass(selectionConfig.constraints, selectionRange, relevantEventCenter, state.businessHours, context)) {
             return false;
         }
         // overlap
@@ -5355,36 +5355,36 @@ var FullCalendar = (function (exports) {
     }
     // Constraint Utils
     // ------------------------------------------------------------------------------------------------------------------------
-    function allConstraintsPass(constraints, subjectRange, otherEventStore, businessHoursUnexpanded, context) {
+    function allConstraintsPass(constraints, subjectRange, otherEventCenter, businessHoursUnexpanded, context) {
         for (var _i = 0, constraints_1 = constraints; _i < constraints_1.length; _i++) {
             var constraint = constraints_1[_i];
-            if (!anyRangesContainRange(constraintToRanges(constraint, subjectRange, otherEventStore, businessHoursUnexpanded, context), subjectRange)) {
+            if (!anyRangesContainRange(constraintToRanges(constraint, subjectRange, otherEventCenter, businessHoursUnexpanded, context), subjectRange)) {
                 return false;
             }
         }
         return true;
     }
     function constraintToRanges(constraint, subjectRange, // for expanding a recurring constraint, or expanding business hours
-    otherEventStore, // for if constraint is an even group ID
+    otherEventCenter, // for if constraint is an even group ID
     businessHoursUnexpanded, // for if constraint is 'businessHours'
     context // for expanding businesshours
     ) {
         if (constraint === 'businessHours') {
-            return eventStoreToRanges(expandRecurring(businessHoursUnexpanded, subjectRange, context));
+            return eventCenterToRanges(expandRecurring(businessHoursUnexpanded, subjectRange, context));
         }
         else if (typeof constraint === 'string') { // an group ID
-            return eventStoreToRanges(filterEventStoreDefs(otherEventStore, function (eventDef) {
+            return eventCenterToRanges(filterEventCenterDefs(otherEventCenter, function (eventDef) {
                 return eventDef.groupId === constraint;
             }));
         }
         else if (typeof constraint === 'object' && constraint) { // non-null object
-            return eventStoreToRanges(expandRecurring(constraint, subjectRange, context));
+            return eventCenterToRanges(expandRecurring(constraint, subjectRange, context));
         }
         return []; // if it's false
     }
-    // TODO: move to event-store file?
-    function eventStoreToRanges(eventStore) {
-        var instances = eventStore.instances;
+    // TODO: move to event-Center file?
+    function eventCenterToRanges(eventCenter) {
+        var instances = eventCenter.instances;
         var ranges = [];
         for (var instanceId in instances) {
             ranges.push(instances[instanceId].range);
@@ -6886,10 +6886,10 @@ var FullCalendar = (function (exports) {
         context.emitter.trigger('datesSet', __assign(__assign({}, buildRangeApiWithTimeZone(dateProfile.activeRange, context.dateEnv)), { view: context.viewApi }));
     }
 
-    function handleEventStore(eventStore, context) {
+    function handleEventCenter(eventCenter, context) {
         var emitter = context.emitter;
         if (emitter.hasHandlers('eventsSet')) {
-            emitter.trigger('eventsSet', buildEventApis(eventStore, context));
+            emitter.trigger('eventsSet', buildEventApis(eventCenter, context));
         }
     }
 
@@ -6910,7 +6910,7 @@ var FullCalendar = (function (exports) {
             },
             propSetHandlers: {
                 dateProfile: handleDateProfile,
-                eventStore: handleEventStore
+                eventCenter: handleEventCenter
             }
         })
     ];
@@ -7158,8 +7158,8 @@ var FullCalendar = (function (exports) {
                 eventSources: eventSources,
                 eventUiBases: {},
                 loadingLevel: computeEventSourceLoadingLevel(eventSources),
-                eventStore: createEmptyEventStore(),
-                renderableEventStore: createEmptyEventStore(),
+                eventCenter: createEmptyEventCenter(),
+                renderableEventCenter: createEmptyEventCenter(),
                 dateSelection: null,
                 eventSelection: '',
                 eventDrag: null,
@@ -7218,13 +7218,13 @@ var FullCalendar = (function (exports) {
             }
             var eventSources = reduceEventSources(state.eventSources, action, dateProfile, calendarContext);
             var eventSourceLoadingLevel = computeEventSourceLoadingLevel(eventSources);
-            var eventStore = reduceEventStore(state.eventStore, action, eventSources, dateProfile, calendarContext);
-            var renderableEventStore = (eventSourceLoadingLevel && !currentViewData.options.progressiveEventRendering) ?
-                (state.renderableEventStore || eventStore) : // try from previous state
-                eventStore;
+            var eventCenter = reduceEventCenter(state.eventCenter, action, eventSources, dateProfile, calendarContext);
+            var renderableEventCenter = (eventSourceLoadingLevel && !currentViewData.options.progressiveEventRendering) ?
+                (state.renderableEventCenter || eventCenter) : // try from previous state
+                eventCenter;
             var _b = this.buildViewUiProps(calendarContext), eventUiSingleBase = _b.eventUiSingleBase, selectionConfig = _b.selectionConfig; // will memoize obj
             var eventUiBySource = this.buildEventUiBySource(eventSources);
-            var eventUiBases = this.buildEventUiBases(renderableEventStore.defs, eventUiSingleBase, eventUiBySource);
+            var eventUiBases = this.buildEventUiBases(renderableEventCenter.defs, eventUiSingleBase, eventUiBySource);
             var prevLoadingLevel = state.loadingLevel || 0;
             var loadingLevel = eventSourceLoadingLevel;
             var newState = {
@@ -7233,8 +7233,8 @@ var FullCalendar = (function (exports) {
                 currentDate: currentDate,
                 dateProfile: dateProfile,
                 eventSources: eventSources,
-                eventStore: eventStore,
-                renderableEventStore: renderableEventStore,
+                eventCenter: eventCenter,
+                renderableEventCenter: renderableEventCenter,
                 selectionConfig: selectionConfig,
                 eventUiBases: eventUiBases,
                 loadingLevel: loadingLevel,
@@ -7274,7 +7274,7 @@ var FullCalendar = (function (exports) {
                 if (oldCalendarOptions.timeZone !== newCalendarOptions.timeZone) {
                     // hack
                     state.eventSources = data.eventSources = reduceEventSourcesNewTimeZone(data.eventSources, state.dateProfile, data);
-                    state.eventStore = data.eventStore = rezoneEventStoreDates(data.eventStore, oldData.dateEnv, data.dateEnv);
+                    state.eventCenter = data.eventCenter = rezoneEventCenterDates(data.eventCenter, oldData.dateEnv, data.dateEnv);
                 }
                 for (var optionName in changeHandlers) {
                     if (oldCalendarOptions[optionName] !== newCalendarOptions[optionName]) {
@@ -7546,7 +7546,7 @@ var FullCalendar = (function (exports) {
     you can get nextDayThreshold from context.nextDayThreshold
     */
     function sliceEvents(props, allDay) {
-        return sliceEventStore(props.eventStore, props.eventUiBases, props.dateProfile.activeRange, allDay ? props.nextDayThreshold : null).fg;
+        return sliceEventCenter(props.eventCenter, props.eventUiBases, props.dateProfile.activeRange, allDay ? props.nextDayThreshold : null).fg;
     }
 
     var NamedTimeZoneImpl = /** @class */ (function () {
@@ -7571,14 +7571,14 @@ var FullCalendar = (function (exports) {
             useEventCenter: input.useEventCenter != null ? input.useEventCenter : true
         };
     }
-    function interactionSettingsToStore(settings) {
+    function interactionSettingsToCenter(settings) {
         var _a;
         return _a = {},
             _a[settings.component.uid] = settings,
             _a;
     }
     // global state
-    var interactionSettingsStore = {};
+    var interactionSettingsCenter = {};
 
     /*
     An abstraction for a dragging interaction originating on an event.
@@ -7877,7 +7877,7 @@ var FullCalendar = (function (exports) {
             _this.handleNavLinkClick = buildDelegationHandler('a[data-navlink]', _this._handleNavLinkClick.bind(_this));
             _this.headerRef = createRef();
             _this.footerRef = createRef();
-            _this.interactionsStore = {};
+            _this.interactionsCenter = {};
             // Component Registration
             // -----------------------------------------------------------------------------------------------------------------
             _this.registerInteractiveComponent = function (component, settingsInput) {
@@ -7890,16 +7890,16 @@ var FullCalendar = (function (exports) {
                 var interactions = interactionClasses.map(function (interactionClass) {
                     return new interactionClass(settings);
                 });
-                _this.interactionsStore[component.uid] = interactions;
-                interactionSettingsStore[component.uid] = settings;
+                _this.interactionsCenter[component.uid] = interactions;
+                interactionSettingsCenter[component.uid] = settings;
             };
             _this.unregisterInteractiveComponent = function (component) {
-                for (var _i = 0, _a = _this.interactionsStore[component.uid]; _i < _a.length; _i++) {
+                for (var _i = 0, _a = _this.interactionsCenter[component.uid]; _i < _a.length; _i++) {
                     var listener = _a[_i];
                     listener.destroy();
                 }
-                delete _this.interactionsStore[component.uid];
-                delete interactionSettingsStore[component.uid];
+                delete _this.interactionsCenter[component.uid];
+                delete interactionSettingsCenter[component.uid];
             };
             // Resizing
             // -----------------------------------------------------------------------------------------------------------------
@@ -8009,7 +8009,7 @@ var FullCalendar = (function (exports) {
             var viewProps = {
                 dateProfile: props.dateProfile,
                 businessHours: props.businessHours,
-                eventStore: props.renderableEventStore,
+                eventCenter: props.renderableEventCenter,
                 eventUiBases: props.eventUiBases,
                 dateSelection: props.dateSelection,
                 eventSelection: props.eventSelection,
@@ -8396,7 +8396,7 @@ var FullCalendar = (function (exports) {
         function Slicer() {
             this.sliceBusinessHours = memoize(this._sliceBusinessHours);
             this.sliceDateSelection = memoize(this._sliceDateSpan);
-            this.sliceEventStore = memoize(this._sliceEventStore);
+            this.sliceEventCenter = memoize(this._sliceEventCenter);
             this.sliceEventDrag = memoize(this._sliceInteraction);
             this.sliceEventResize = memoize(this._sliceInteraction);
             this.forceDayIfListItem = false; // hack
@@ -8407,7 +8407,7 @@ var FullCalendar = (function (exports) {
                 extraArgs[_i - 4] = arguments[_i];
             }
             var eventUiBases = props.eventUiBases;
-            var eventSegs = this.sliceEventStore.apply(this, __spreadArrays([props.eventStore, eventUiBases, dateProfile, nextDayThreshold], extraArgs));
+            var eventSegs = this.sliceEventCenter.apply(this, __spreadArrays([props.eventCenter, eventUiBases, dateProfile, nextDayThreshold], extraArgs));
             return {
                 dateSelectionSegs: this.sliceDateSelection.apply(this, __spreadArrays([props.dateSelection, eventUiBases, context], extraArgs)),
                 businessHourSegs: this.sliceBusinessHours.apply(this, __spreadArrays([props.businessHours, dateProfile, nextDayThreshold, context], extraArgs)),
@@ -8436,18 +8436,18 @@ var FullCalendar = (function (exports) {
             if (!businessHours) {
                 return [];
             }
-            return this._sliceEventStore.apply(this, __spreadArrays([expandRecurring(businessHours, computeActiveRange(dateProfile, Boolean(nextDayThreshold)), context),
+            return this._sliceEventCenter.apply(this, __spreadArrays([expandRecurring(businessHours, computeActiveRange(dateProfile, Boolean(nextDayThreshold)), context),
                 {},
                 dateProfile,
                 nextDayThreshold], extraArgs)).bg;
         };
-        Slicer.prototype._sliceEventStore = function (eventStore, eventUiBases, dateProfile, nextDayThreshold) {
+        Slicer.prototype._sliceEventCenter = function (eventCenter, eventUiBases, dateProfile, nextDayThreshold) {
             var extraArgs = [];
             for (var _i = 4; _i < arguments.length; _i++) {
                 extraArgs[_i - 4] = arguments[_i];
             }
-            if (eventStore) {
-                var rangeRes = sliceEventStore(eventStore, eventUiBases, computeActiveRange(dateProfile, Boolean(nextDayThreshold)), nextDayThreshold);
+            if (eventCenter) {
+                var rangeRes = sliceEventCenter(eventCenter, eventUiBases, computeActiveRange(dateProfile, Boolean(nextDayThreshold)), nextDayThreshold);
                 return {
                     bg: this.sliceEventRanges(rangeRes.bg, extraArgs),
                     fg: this.sliceEventRanges(rangeRes.fg, extraArgs)
@@ -8465,7 +8465,7 @@ var FullCalendar = (function (exports) {
             if (!interaction) {
                 return null;
             }
-            var rangeRes = sliceEventStore(interaction.mutatedEvents, eventUiBases, computeActiveRange(dateProfile, Boolean(nextDayThreshold)), nextDayThreshold);
+            var rangeRes = sliceEventCenter(interaction.mutatedEvents, eventUiBases, computeActiveRange(dateProfile, Boolean(nextDayThreshold)), nextDayThreshold);
             return {
                 segs: this.sliceEventRanges(rangeRes.fg, extraArgs),
                 affectedInstances: interaction.affectedEvents.instances,
@@ -9642,7 +9642,7 @@ var FullCalendar = (function (exports) {
     }());
 
     /*
-    Is a cache for a given element's scroll information (all the info that ScrollController stores)
+    Is a cache for a given element's scroll information (all the info that ScrollController Centers)
     in addition the "client rectangle" of the element.. the area within the scrollbars.
 
     The cache can be in one of two modes:
@@ -10163,7 +10163,7 @@ var FullCalendar = (function (exports) {
     - dragend
     */
     var HitDragging = /** @class */ (function () {
-        function HitDragging(dragging, droppableStore) {
+        function HitDragging(dragging, droppableCenter) {
             var _this = this;
             // options that can be set by caller
             this.useSubjectCenter = false;
@@ -10206,7 +10206,7 @@ var FullCalendar = (function (exports) {
                 _this.movingHit = null;
                 _this.emitter.trigger('dragend', ev);
             };
-            this.droppableStore = droppableStore;
+            this.droppableCenter = droppableCenter;
             dragging.emitter.on('pointerdown', this.handlePointerDown);
             dragging.emitter.on('dragstart', this.handleDragStart);
             dragging.emitter.on('dragmove', this.handleDragMove);
@@ -10248,7 +10248,7 @@ var FullCalendar = (function (exports) {
             }
         };
         HitDragging.prototype.prepareHits = function () {
-            this.offsetTrackers = mapHash(this.droppableStore, function (interactionSettings) {
+            this.offsetTrackers = mapHash(this.droppableCenter, function (interactionSettings) {
                 interactionSettings.component.prepareHits();
                 return new OffsetTracker(interactionSettings.el);
             });
@@ -10261,10 +10261,10 @@ var FullCalendar = (function (exports) {
             this.offsetTrackers = {};
         };
         HitDragging.prototype.queryHitForOffset = function (offsetLeft, offsetTop) {
-            var _a = this, droppableStore = _a.droppableStore, offsetTrackers = _a.offsetTrackers;
+            var _a = this, droppableCenter = _a.droppableCenter, offsetTrackers = _a.offsetTrackers;
             var bestHit = null;
-            for (var id in droppableStore) {
-                var component = droppableStore[id].component;
+            for (var id in droppableCenter) {
+                var component = droppableCenter[id].component;
                 var offsetTracker = offsetTrackers[id];
                 if (offsetTracker && // wasn't destroyed mid-drag
                     offsetTracker.isWithinClipping(offsetLeft, offsetTop)) {
@@ -10357,7 +10357,7 @@ var FullCalendar = (function (exports) {
             // we DO want to watch pointer moves because otherwise finalHit won't get populated
             _this.dragging = new FeaturefulElementDragging(settings.el);
             _this.dragging.autoScroller.isEnabled = false;
-            var hitDragging = _this.hitDragging = new HitDragging(_this.dragging, interactionSettingsToStore(settings));
+            var hitDragging = _this.hitDragging = new HitDragging(_this.dragging, interactionSettingsToCenter(settings));
             hitDragging.emitter.on('pointerdown', _this.handlePointerDown);
             hitDragging.emitter.on('dragend', _this.handleDragEnd);
             return _this;
@@ -10430,7 +10430,7 @@ var FullCalendar = (function (exports) {
             dragging.touchScrollAllowed = false;
             dragging.minDistance = options.selectMinDistance || 0;
             dragging.autoScroller.isEnabled = options.dragScroll;
-            var hitDragging = _this.hitDragging = new HitDragging(_this.dragging, interactionSettingsToStore(settings));
+            var hitDragging = _this.hitDragging = new HitDragging(_this.dragging, interactionSettingsToCenter(settings));
             hitDragging.emitter.on('pointerdown', _this.handlePointerDown);
             hitDragging.emitter.on('dragstart', _this.handleDragStart);
             hitDragging.emitter.on('hitupdate', _this.handleHitUpdate);
@@ -10499,7 +10499,7 @@ var FullCalendar = (function (exports) {
                 var subjectSeg = _this.subjectSeg = getElSeg(ev.subjectEl);
                 var eventRange = _this.eventRange = subjectSeg.eventRange;
                 var eventInstanceId = eventRange.instance.instanceId;
-                _this.relevantEvents = getRelevantEvents(initialContext.getCurrentData().eventStore, eventInstanceId);
+                _this.relevantEvents = getRelevantEvents(initialContext.getCurrentData().eventCenter, eventInstanceId);
                 dragging.minDistance = ev.isTouch ? 0 : options.eventDragMinDistance;
                 dragging.delay =
                     // only do a touch delay if touch and this event hasn't been selected yet
@@ -10554,7 +10554,7 @@ var FullCalendar = (function (exports) {
                 var isInvalid = false;
                 var interaction = {
                     affectedEvents: relevantEvents,
-                    mutatedEvents: createEmptyEventStore(),
+                    mutatedEvents: createEmptyEventCenter(),
                     isEvent: true
                 };
                 if (hit) {
@@ -10565,13 +10565,13 @@ var FullCalendar = (function (exports) {
                         receivingOptions.editable && receivingOptions.droppable) {
                         mutation = computeEventMutation(initialHit, hit, receivingContext.getCurrentData().pluginHooks.eventDragMutationMassagers);
                         if (mutation) {
-                            mutatedRelevantEvents = applyMutationToEventStore(relevantEvents, receivingContext.getCurrentData().eventUiBases, mutation, receivingContext);
+                            mutatedRelevantEvents = applyMutationToEventCenter(relevantEvents, receivingContext.getCurrentData().eventUiBases, mutation, receivingContext);
                             interaction.mutatedEvents = mutatedRelevantEvents;
                             if (!receivingComponent.isInteractionValid(interaction)) {
                                 isInvalid = true;
                                 mutation = null;
                                 mutatedRelevantEvents = null;
-                                interaction.mutatedEvents = createEmptyEventStore();
+                                interaction.mutatedEvents = createEmptyEventCenter();
                             }
                         }
                     }
@@ -10630,7 +10630,7 @@ var FullCalendar = (function (exports) {
                             var updatedEventApi = new EventApi(initialContext_1, mutatedRelevantEvents_1.defs[eventDef.defId], eventInstance ? mutatedRelevantEvents_1.instances[eventInstance.instanceId] : null);
                             initialContext_1.dispatch({
                                 type: 'MERGE_EVENTS',
-                                eventStore: mutatedRelevantEvents_1
+                                eventCenter: mutatedRelevantEvents_1
                             });
                             var eventChangeArg = {
                                 oldEvent: eventApi,
@@ -10639,7 +10639,7 @@ var FullCalendar = (function (exports) {
                                 revert: function () {
                                     initialContext_1.dispatch({
                                         type: 'MERGE_EVENTS',
-                                        eventStore: relevantEvents_1 // the pre-change data
+                                        eventCenter: relevantEvents_1 // the pre-change data
                                     });
                                 }
                             };
@@ -10659,14 +10659,14 @@ var FullCalendar = (function (exports) {
                                 revert: function () {
                                     initialContext_1.dispatch({
                                         type: 'MERGE_EVENTS',
-                                        eventStore: relevantEvents_1
+                                        eventCenter: relevantEvents_1
                                     });
                                 }
                             };
                             initialContext_1.emitter.trigger('eventLeave', __assign(__assign({}, eventRemoveArg), { draggedEl: ev.subjectEl, view: initialView }));
                             initialContext_1.dispatch({
                                 type: 'REMOVE_EVENTS',
-                                eventStore: relevantEvents_1
+                                eventCenter: relevantEvents_1
                             });
                             initialContext_1.emitter.trigger('eventRemove', eventRemoveArg);
                             var addedEventDef = mutatedRelevantEvents_1.defs[eventDef.defId];
@@ -10674,7 +10674,7 @@ var FullCalendar = (function (exports) {
                             var addedEventApi = new EventApi(receivingContext_1, addedEventDef, addedEventInstance);
                             receivingContext_1.dispatch({
                                 type: 'MERGE_EVENTS',
-                                eventStore: mutatedRelevantEvents_1
+                                eventCenter: mutatedRelevantEvents_1
                             });
                             var eventAddArg = {
                                 event: addedEventApi,
@@ -10682,7 +10682,7 @@ var FullCalendar = (function (exports) {
                                 revert: function () {
                                     receivingContext_1.dispatch({
                                         type: 'REMOVE_EVENTS',
-                                        eventStore: mutatedRelevantEvents_1
+                                        eventCenter: mutatedRelevantEvents_1
                                     });
                                 }
                             };
@@ -10709,7 +10709,7 @@ var FullCalendar = (function (exports) {
             dragging.pointer.selector = EventDragging.SELECTOR;
             dragging.touchScrollAllowed = false;
             dragging.autoScroller.isEnabled = options.dragScroll;
-            var hitDragging = _this.hitDragging = new HitDragging(_this.dragging, interactionSettingsStore);
+            var hitDragging = _this.hitDragging = new HitDragging(_this.dragging, interactionSettingsCenter);
             hitDragging.useSubjectCenter = settings.useEventCenter;
             hitDragging.emitter.on('pointerdown', _this.handlePointerDown);
             hitDragging.emitter.on('dragstart', _this.handleDragStart);
@@ -10734,7 +10734,7 @@ var FullCalendar = (function (exports) {
                         type: 'SET_EVENT_DRAG',
                         state: {
                             affectedEvents: state.affectedEvents,
-                            mutatedEvents: createEmptyEventStore(),
+                            mutatedEvents: createEmptyEventCenter(),
                             isEvent: true
                         }
                     });
@@ -10837,7 +10837,7 @@ var FullCalendar = (function (exports) {
             _this.handleDragStart = function (ev) {
                 var context = _this.component.context;
                 var eventRange = _this.eventRange;
-                _this.relevantEvents = getRelevantEvents(context.getCurrentData().eventStore, _this.eventRange.instance.instanceId);
+                _this.relevantEvents = getRelevantEvents(context.getCurrentData().eventCenter, _this.eventRange.instance.instanceId);
                 var segEl = _this.querySegEl(ev);
                 _this.draggingSegEl = segEl;
                 _this.draggingSeg = getElSeg(segEl);
@@ -10859,14 +10859,14 @@ var FullCalendar = (function (exports) {
                 var isInvalid = false;
                 var interaction = {
                     affectedEvents: relevantEvents,
-                    mutatedEvents: createEmptyEventStore(),
+                    mutatedEvents: createEmptyEventCenter(),
                     isEvent: true
                 };
                 if (hit) {
                     mutation = computeMutation(initialHit, hit, ev.subjectEl.classList.contains('fc-event-resizer-start'), eventInstance.range, context.pluginHooks.eventResizeJoinTransforms);
                 }
                 if (mutation) {
-                    mutatedRelevantEvents = applyMutationToEventStore(relevantEvents, context.getCurrentData().eventUiBases, mutation, context);
+                    mutatedRelevantEvents = applyMutationToEventCenter(relevantEvents, context.getCurrentData().eventUiBases, mutation, context);
                     interaction.mutatedEvents = mutatedRelevantEvents;
                     if (!_this.component.isInteractionValid(interaction)) {
                         isInvalid = true;
@@ -10915,7 +10915,7 @@ var FullCalendar = (function (exports) {
                     var updatedEventApi = new EventApi(context, mutatedRelevantEvents.defs[eventDef.defId], eventInstance ? mutatedRelevantEvents.instances[eventInstance.instanceId] : null);
                     context.dispatch({
                         type: 'MERGE_EVENTS',
-                        eventStore: mutatedRelevantEvents
+                        eventCenter: mutatedRelevantEvents
                     });
                     var eventChangeArg = {
                         oldEvent: eventApi,
@@ -10924,7 +10924,7 @@ var FullCalendar = (function (exports) {
                         revert: function () {
                             context.dispatch({
                                 type: 'MERGE_EVENTS',
-                                eventStore: relevantEvents // the pre-change events
+                                eventCenter: relevantEvents // the pre-change events
                             });
                         }
                     };
@@ -10945,7 +10945,7 @@ var FullCalendar = (function (exports) {
             dragging.pointer.selector = '.fc-event-resizer';
             dragging.touchScrollAllowed = false;
             dragging.autoScroller.isEnabled = component.context.options.dragScroll;
-            var hitDragging = _this.hitDragging = new HitDragging(_this.dragging, interactionSettingsToStore(settings));
+            var hitDragging = _this.hitDragging = new HitDragging(_this.dragging, interactionSettingsToCenter(settings));
             hitDragging.emitter.on('pointerdown', _this.handlePointerDown);
             hitDragging.emitter.on('dragstart', _this.handleDragStart);
             hitDragging.emitter.on('hitupdate', _this.handleHitUpdate);
@@ -11082,18 +11082,18 @@ var FullCalendar = (function (exports) {
                 var droppableEvent = null;
                 var isInvalid = false;
                 var interaction = {
-                    affectedEvents: createEmptyEventStore(),
-                    mutatedEvents: createEmptyEventStore(),
+                    affectedEvents: createEmptyEventCenter(),
+                    mutatedEvents: createEmptyEventCenter(),
                     isEvent: _this.dragMeta.create
                 };
                 if (hit) {
                     receivingContext = hit.component.context;
                     if (_this.canDropElOnCalendar(ev.subjectEl, receivingContext)) {
                         droppableEvent = computeEventForDateSpan(hit.dateSpan, _this.dragMeta, receivingContext);
-                        interaction.mutatedEvents = eventTupleToStore(droppableEvent);
+                        interaction.mutatedEvents = eventTupleToCenter(droppableEvent);
                         isInvalid = !isInteractionValid(interaction, receivingContext);
                         if (isInvalid) {
-                            interaction.mutatedEvents = createEmptyEventStore();
+                            interaction.mutatedEvents = createEmptyEventCenter();
                             droppableEvent = null;
                         }
                     }
@@ -11123,10 +11123,10 @@ var FullCalendar = (function (exports) {
                     var dragMeta = _this.dragMeta;
                     receivingContext.emitter.trigger('drop', __assign(__assign({}, buildDatePointApiWithContext(finalHit.dateSpan, receivingContext)), { draggedEl: pev.subjectEl, jsEvent: pev.origEvent, view: finalView }));
                     if (dragMeta.create) {
-                        var addingEvents_1 = eventTupleToStore(droppableEvent);
+                        var addingEvents_1 = eventTupleToCenter(droppableEvent);
                         receivingContext.dispatch({
                             type: 'MERGE_EVENTS',
-                            eventStore: addingEvents_1
+                            eventCenter: addingEvents_1
                         });
                         if (pev.isTouch) {
                             receivingContext.dispatch({
@@ -11141,7 +11141,7 @@ var FullCalendar = (function (exports) {
                             revert: function () {
                                 receivingContext.dispatch({
                                     type: 'REMOVE_EVENTS',
-                                    eventStore: addingEvents_1
+                                    eventCenter: addingEvents_1
                                 });
                             },
                             draggedEl: pev.subjectEl,
@@ -11152,7 +11152,7 @@ var FullCalendar = (function (exports) {
                 _this.receivingContext = null;
                 _this.droppableEvent = null;
             };
-            var hitDragging = this.hitDragging = new HitDragging(dragging, interactionSettingsStore);
+            var hitDragging = this.hitDragging = new HitDragging(dragging, interactionSettingsCenter);
             hitDragging.requireInitial = false; // will start outside of a component
             hitDragging.emitter.on('dragstart', this.handleDragStart);
             hitDragging.emitter.on('hitupdate', this.handleHitUpdate);
@@ -11196,7 +11196,7 @@ var FullCalendar = (function (exports) {
         };
         return ExternalElementDragging;
     }());
-    // Utils for computing event store from the DragMeta
+    // Utils for computing event Center from the DragMeta
     // ----------------------------------------------------------------------------------------------------
     function computeEventForDateSpan(dateSpan, dragMeta, context) {
         var defProps = __assign({}, dragMeta.leftoverProps);
@@ -11328,7 +11328,7 @@ var FullCalendar = (function (exports) {
         };
         InferredElementDragging.prototype.setMirrorIsVisible = function (bool) {
             if (bool) {
-                // restore a previously hidden element.
+                // reCenter a previously hidden element.
                 // use the reference in case the selector class has already been removed.
                 if (this.currentMirrorEl) {
                     this.currentMirrorEl.style.visibility = '';
@@ -12454,7 +12454,7 @@ var FullCalendar = (function (exports) {
             var dayTableModel = this.buildDayTableModel(props.dateProfile, dateProfileGenerator);
             var headerContent = options.dayHeaders &&
                 createElement(DayHeader, { ref: this.headerRef, dateProfile: props.dateProfile, dates: dayTableModel.headerDates, datesRepDistinctDays: dayTableModel.rowCnt === 1 });
-            var bodyContent = function (contentArg) { return (createElement(DayTable, { ref: _this.tableRef, dateProfile: props.dateProfile, dayTableModel: dayTableModel, businessHours: props.businessHours, dateSelection: props.dateSelection, eventStore: props.eventStore, eventUiBases: props.eventUiBases, eventSelection: props.eventSelection, eventDrag: props.eventDrag, eventResize: props.eventResize, nextDayThreshold: options.nextDayThreshold, colGroupNode: contentArg.tableColGroupNode, tableMinWidth: contentArg.tableMinWidth, dayMaxEvents: options.dayMaxEvents, dayMaxEventRows: options.dayMaxEventRows, showWeekNumbers: options.weekNumbers, expandRows: !props.isHeightAuto, headerAlignElRef: _this.headerElRef, clientWidth: contentArg.clientWidth, clientHeight: contentArg.clientHeight, forPrint: props.forPrint })); };
+            var bodyContent = function (contentArg) { return (createElement(DayTable, { ref: _this.tableRef, dateProfile: props.dateProfile, dayTableModel: dayTableModel, businessHours: props.businessHours, dateSelection: props.dateSelection, eventCenter: props.eventCenter, eventUiBases: props.eventUiBases, eventSelection: props.eventSelection, eventDrag: props.eventDrag, eventResize: props.eventResize, nextDayThreshold: options.nextDayThreshold, colGroupNode: contentArg.tableColGroupNode, tableMinWidth: contentArg.tableMinWidth, dayMaxEvents: options.dayMaxEvents, dayMaxEventRows: options.dayMaxEventRows, showWeekNumbers: options.weekNumbers, expandRows: !props.isHeightAuto, headerAlignElRef: _this.headerElRef, clientWidth: contentArg.clientWidth, clientHeight: contentArg.clientHeight, forPrint: props.forPrint })); };
             return options.dayMinWidth
                 ? this.renderHScrollLayout(headerContent, bodyContent, dayTableModel.colCnt, options.dayMinWidth)
                 : this.renderSimpleLayout(headerContent, bodyContent);
@@ -13817,7 +13817,7 @@ var FullCalendar = (function (exports) {
         function ListView() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
             _this.computeDateVars = memoize(computeDateVars);
-            _this.eventStoreToSegs = memoize(_this._eventStoreToSegs);
+            _this.eventCenterToSegs = memoize(_this._eventCenterToSegs);
             _this.setRootEl = function (rootEl) {
                 if (rootEl) {
                     _this.context.registerInteractiveComponent(_this, {
@@ -13839,7 +13839,7 @@ var FullCalendar = (function (exports) {
                 context.options.stickyHeaderDates !== false ? 'fc-list-sticky' : ''
             ];
             var _b = this.computeDateVars(props.dateProfile), dayDates = _b.dayDates, dayRanges = _b.dayRanges;
-            var eventSegs = this.eventStoreToSegs(props.eventStore, props.eventUiBases, dayRanges);
+            var eventSegs = this.eventCenterToSegs(props.eventCenter, props.eventUiBases, dayRanges);
             return (createElement(ViewRoot, { viewSpec: context.viewSpec, elRef: this.setRootEl }, function (rootElRef, classNames) { return (createElement("div", { ref: rootElRef, className: extraClassNames.concat(classNames).join(' ') },
                 createElement(Scroller, { liquid: !props.isHeightAuto, overflowX: props.isHeightAuto ? 'visible' : 'hidden', overflowY: props.isHeightAuto ? 'visible' : 'auto' }, eventSegs.length > 0 ?
                     _this.renderSegList(eventSegs, dayDates) :
@@ -13876,8 +13876,8 @@ var FullCalendar = (function (exports) {
                     createElement("tbody", null, innerNodes)));
             }));
         };
-        ListView.prototype._eventStoreToSegs = function (eventStore, eventUiBases, dayRanges) {
-            return this.eventRangesToSegs(sliceEventStore(eventStore, eventUiBases, this.props.dateProfile.activeRange, this.context.options.nextDayThreshold).fg, dayRanges);
+        ListView.prototype._eventCenterToSegs = function (eventCenter, eventUiBases, dayRanges) {
+            return this.eventRangesToSegs(sliceEventCenter(eventCenter, eventUiBases, this.props.dateProfile.activeRange, this.context.options.nextDayThreshold).fg, dayRanges);
         };
         ListView.prototype.eventRangesToSegs = function (eventRanges, dayRanges) {
             var segs = [];
@@ -14260,7 +14260,7 @@ var FullCalendar = (function (exports) {
     exports.addWeeks = addWeeks;
     exports.allowContextMenu = allowContextMenu;
     exports.allowSelection = allowSelection;
-    exports.applyMutationToEventStore = applyMutationToEventStore;
+    exports.applyMutationToEventCenter = applyMutationToEventCenter;
     exports.applyStyle = applyStyle;
     exports.applyStyleProp = applyStyleProp;
     exports.asCleanDays = asCleanDays;
@@ -14300,7 +14300,7 @@ var FullCalendar = (function (exports) {
     exports.createContext = createContext$1;
     exports.createDuration = createDuration;
     exports.createElement = createElement;
-    exports.createEmptyEventStore = createEmptyEventStore;
+    exports.createEmptyEventCenter = createEmptyEventCenter;
     exports.createEventInstance = createEventInstance;
     exports.createEventUi = createEventUi;
     exports.createFormatter = createFormatter;
@@ -14317,8 +14317,8 @@ var FullCalendar = (function (exports) {
     exports.elementClosest = elementClosest;
     exports.elementMatches = elementMatches;
     exports.enableCursor = enableCursor;
-    exports.eventTupleToStore = eventTupleToStore;
-    exports.filterEventStoreDefs = filterEventStoreDefs;
+    exports.eventTupleToCenter = eventTupleToCenter;
+    exports.filterEventCenterDefs = filterEventCenterDefs;
     exports.filterHash = filterHash;
     exports.findDirectChildren = findDirectChildren;
     exports.findElements = findElements;
@@ -14355,8 +14355,8 @@ var FullCalendar = (function (exports) {
     exports.hasBgRendering = hasBgRendering;
     exports.hasShrinkWidth = hasShrinkWidth;
     exports.identity = identity;
-    exports.interactionSettingsStore = interactionSettingsStore;
-    exports.interactionSettingsToStore = interactionSettingsToStore;
+    exports.interactionSettingsCenter = interactionSettingsCenter;
+    exports.interactionSettingsToCenter = interactionSettingsToCenter;
     exports.intersectRanges = intersectRanges;
     exports.intersectRects = intersectRects;
     exports.isArraysEqual = isArraysEqual;
@@ -14374,7 +14374,7 @@ var FullCalendar = (function (exports) {
     exports.memoizeArraylike = memoizeArraylike;
     exports.memoizeHashlike = memoizeHashlike;
     exports.memoizeObjArg = memoizeObjArg;
-    exports.mergeEventStores = mergeEventStores;
+    exports.mergeEventCenters = mergeEventCenters;
     exports.multiplyDuration = multiplyDuration;
     exports.padStart = padStart;
     exports.parseBusinessHours = parseBusinessHours;
@@ -14404,7 +14404,7 @@ var FullCalendar = (function (exports) {
     exports.sanitizeShrinkWidth = sanitizeShrinkWidth;
     exports.setElSeg = setElSeg;
     exports.setRef = setRef;
-    exports.sliceEventStore = sliceEventStore;
+    exports.sliceEventCenter = sliceEventCenter;
     exports.sliceEvents = sliceEvents;
     exports.sortEventSegs = sortEventSegs;
     exports.startOfDay = startOfDay;

@@ -159,7 +159,7 @@
             if (fileInputClones && fileInputClones.length) {
               options.fileInput.each(function (index, input) {
                 var clone = $(fileInputClones[index]);
-                // Restore the original name and form properties:
+                // ReCenter the original name and form properties:
                 $(input)
                   .prop('name', clone.prop('name'))
                   .attr('form', clone.attr('form'));

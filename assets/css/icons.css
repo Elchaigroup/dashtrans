@@ -4646,13 +4646,13 @@ File: icons.css
 
 }
 
-.bx-store:before {
+.bx-Center:before {
 
 	content: "\eb8a"
 
 }
 
-.bx-store-alt:before {
+.bx-Center-alt:before {
 
 	content: "\eb8b"
 
@@ -8510,13 +8510,13 @@ File: icons.css
 
 }
 
-.bxs-store:before {
+.bxs-Center:before {
 
 	content: "\ee0e"
 
 }
 
-.bxs-store-alt:before {
+.bxs-Center-alt:before {
 
 	content: "\ee0f"
 
@@ -9494,7 +9494,7 @@ File: icons.css
 
 }
 
-.bxl-play-store:before {
+.bxl-play-Center:before {
 
 	content: "\eeb2"
 
@@ -9898,7 +9898,7 @@ File: icons.css
 
 }
 
-.lni-app-store::before {
+.lni-app-Center::before {
 
 	content: "\ea16"
 
@@ -11830,7 +11830,7 @@ File: icons.css
 
 }
 
-.lni-play-store::before {
+.lni-play-Center::before {
 
 	content: "\eb58"
 

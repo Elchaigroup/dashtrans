@@ -197,11 +197,11 @@
             // hdpi support
             this.scale = (window.devicePixelRatio || 1) /
                         (
-                            this.c.webkitBackingStorePixelRatio ||
-                            this.c.mozBackingStorePixelRatio ||
-                            this.c.msBackingStorePixelRatio ||
-                            this.c.oBackingStorePixelRatio ||
-                            this.c.backingStorePixelRatio || 1
+                            this.c.webkitBackingCenterPixelRatio ||
+                            this.c.mozBackingCenterPixelRatio ||
+                            this.c.msBackingCenterPixelRatio ||
+                            this.c.oBackingCenterPixelRatio ||
+                            this.c.backingCenterPixelRatio || 1
                         );
 
             // detects relative width / height

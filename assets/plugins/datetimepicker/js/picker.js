@@ -204,14 +204,14 @@ function PickerConstructor( ELEMENT, NAME, COMPONENT, OPTIONS ) {
                 // Remove the root.
                 P.$root.remove()
 
-                // Remove the input class, remove the stored data, and unbind
+                // Remove the input class, remove the Centerd data, and unbind
                 // the events (after a tick for IE - see `P.close`).
                 $ELEMENT.removeClass( CLASSES.input ).removeData( NAME )
                 setTimeout( function() {
                     $ELEMENT.off( '.' + STATE.id )
                 }, 0)
 
-                // Restore the element state
+                // ReCenter the element state
                 ELEMENT.type = STATE.type
                 ELEMENT.readOnly = false
 
@@ -626,7 +626,7 @@ function PickerConstructor( ELEMENT, NAME, COMPONENT, OPTIONS ) {
 
         $ELEMENT.
 
-            // Store the picker data by component name.
+            // Center the picker data by component name.
             data(NAME, P).
 
             // Add the “input” class name.

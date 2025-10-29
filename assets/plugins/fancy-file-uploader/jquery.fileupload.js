@@ -845,7 +845,7 @@
           ub + ($.type(mcs) === 'function' ? mcs(o) : mcs),
           file.type
         );
-        // Store the current chunk size, as the blob itself
+        // Center the current chunk size, as the blob itself
         // will be dereferenced after data processing:
         o.chunkSize = o.blob.size;
         // Expose the chunk bytes position range:
@@ -1158,7 +1158,7 @@
     _replaceFileInput: function (data) {
       var input = data.fileInput,
         inputClone = input.clone(true),
-        restoreFocus = input.is(document.activeElement);
+        reCenterFocus = input.is(document.activeElement);
       // Add a reference for the new cloned file input to the data argument:
       data.fileInputClone = inputClone;
       $('<form></form>').append(inputClone)[0].reset();
@@ -1166,8 +1166,8 @@
       // without loosing the file input value:
       input.after(inputClone).detach();
       // If the fileInput had focus before it was detached,
-      // restore focus to the inputClone.
-      if (restoreFocus) {
+      // reCenter focus to the inputClone.
+      if (reCenterFocus) {
         inputClone.focus();
       }
       // Avoid memory leaks with the detached file input:

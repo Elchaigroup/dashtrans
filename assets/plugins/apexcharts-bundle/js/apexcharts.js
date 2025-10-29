@@ -1932,7 +1932,7 @@
       value: function makeAnnotationDraggable(el, annoType, index) {
         var w = this.w;
         var anno = w.config.annotations[annoType][index]; // in the draggable annotations, we will mutate the original config
-        // object and store the values directly there
+        // object and Center the values directly there
 
         el.draggable().on('dragend', function (de) {
           var x = de.target.getAttribute('x');
@@ -8578,27 +8578,27 @@
           isExecCalled: false,
           // whether user updated the chart through the exec method
           initialConfig: null,
-          // we will store the first config user has set to go back when user finishes interactions like zooming and come out of it
+          // we will Center the first config user has set to go back when user finishes interactions like zooming and come out of it
           initialSeries: [],
           lastXAxis: [],
           lastYAxis: [],
           columnSeries: null,
           labels: [],
-          // store the text to draw on x axis
+          // Center the text to draw on x axis
           // Don't mutate the labels, many things including tooltips depends on it!
           timescaleLabels: [],
-          // store the timescaleLabels Labels in another variable
+          // Center the timescaleLabels Labels in another variable
           noLabelsProvided: false,
           // if user didn't provide any categories/labels or x values, fallback to 1,2,3,4...
           allSeriesCollapsed: false,
           collapsedSeries: [],
           // when user collapses a series, it goes into this array
           collapsedSeriesIndices: [],
-          // this stores the index of the collapsedSeries instead of whole object for quick access
+          // this Centers the index of the collapsedSeries instead of whole object for quick access
           ancillaryCollapsedSeries: [],
           // when user collapses an "alwaysVisible" series, it goes into this array
           ancillaryCollapsedSeriesIndices: [],
-          // this stores the index of the ancillaryCollapsedSeries whose y-axis is always visible
+          // this Centers the index of the ancillaryCollapsedSeries whose y-axis is always visible
           risingSeries: [],
           // when user re-opens a collapsed series, it goes here
           dataFormatXNumeric: false,
@@ -8667,10 +8667,10 @@
           // previous paths
           allSeriesHasEqualX: true,
           pointsArray: [],
-          // store the points positions here to draw later on hover
+          // Center the points positions here to draw later on hover
           // format is - [[x,y],[x,y]... [x,y]]
           dataLabelsRects: [],
-          // store the positions of datalabels to prevent collision
+          // Center the positions of datalabels to prevent collision
           lastDrawnDataLabelsIndexes: [],
           x2SpaceAvailable: 0,
           // space available on the right side after grid area
@@ -9245,7 +9245,7 @@
           // user provided labels in labels props
           gl.labels = cnf.labels.slice();
         } else if (this.fallbackToCategory) {
-          // user provided labels in x prop in [{ x: 3, y: 55 }] data, and those labels are already stored in gl.labels[0], so just re-arrange the gl.labels array
+          // user provided labels in x prop in [{ x: 3, y: 55 }] data, and those labels are already Centerd in gl.labels[0], so just re-arrange the gl.labels array
           gl.labels = gl.labels[0];
 
           if (gl.seriesRangeBarTimeline.length) {
@@ -11743,7 +11743,7 @@
 
               gl.seriesX = gl.labels.slice();
             }
-          } // we will still store these labels as the count for this will be different (to draw grid and labels placement)
+          } // we will still Center these labels as the count for this will be different (to draw grid and labels placement)
 
 
           if (isXNumeric) {
@@ -12458,7 +12458,7 @@
 
         if (selectedLocale) {
           // create a complete locale object by extending defaults so you don't get undefined errors.
-          var ret = Utils.extend(en, selectedLocale); // store these locale options in global var for ease access
+          var ret = Utils.extend(en, selectedLocale); // Center these locale options in global var for ease access
 
           this.w.globals.locale = ret.options;
         } else {
@@ -13646,7 +13646,7 @@
         w.globals.yLabelsCoords = [];
         w.globals.yTitleCoords = [];
         w.config.yaxis.map(function (yaxe, index) {
-          // store the labels and titles coords in global vars
+          // Center the labels and titles coords in global vars
           w.globals.yLabelsCoords.push({
             width: yaxisLabelCoords[index].width,
             index: index
@@ -15317,8 +15317,8 @@
           if (w.globals.zoomEnabled) {
             var yaxis = Utils.clone(w.globals.initialConfig.yaxis);
             var xaxis = Utils.clone(w.globals.initialConfig.xaxis);
-            w.globals.zoomed = true; // before zooming in/out, store the last yaxis and xaxis range, so that when user hits the RESET button, we get the original range
-            // also - make sure user is not already zoomed in/out - otherwise we will store zoomed values in lastAxis
+            w.globals.zoomed = true; // before zooming in/out, Center the last yaxis and xaxis range, so that when user hits the RESET button, we get the original range
+            // also - make sure user is not already zoomed in/out - otherwise we will Center zoomed values in lastAxis
             // DEAD code - the below condition will never run now as zoomed is made false above
 
             if (!w.globals.zoomed) {
@@ -16087,7 +16087,7 @@
 
         if (ttCtx.showTooltipTitle) {
           if (ttCtx.tooltipTitle === null) {
-            // get it once if null, and store it in class property
+            // get it once if null, and Center it in class property
             ttCtx.tooltipTitle = w.globals.dom.baseEl.querySelector('.apexcharts-tooltip-title');
           }
 
@@ -22237,7 +22237,7 @@
       this.ctx = ctx;
       this.w = ctx.w;
       this.el = el;
-    } // get data and store into appropriate vars
+    } // get data and Center into appropriate vars
 
 
     _createClass(Core, [{
@@ -22760,9 +22760,9 @@
             w.config = Utils.extend(w.config, options);
 
             if (overwriteInitialConfig) {
-              // we need to forget the lastXAxis and lastYAxis is user forcefully overwriteInitialConfig. If we do not do this, and next time when user zooms the chart after setting yaxis.min/max or xaxis.min/max - the stored lastXAxis will never allow the chart to use the updated min/max by user.
+              // we need to forget the lastXAxis and lastYAxis is user forcefully overwriteInitialConfig. If we do not do this, and next time when user zooms the chart after setting yaxis.min/max or xaxis.min/max - the Centerd lastXAxis will never allow the chart to use the updated min/max by user.
               w.globals.lastXAxis = [];
-              w.globals.lastYAxis = []; // After forgetting lastAxes, we need to restore the new config in initialConfig/initialSeries
+              w.globals.lastYAxis = []; // After forgetting lastAxes, we need to reCenter the new config in initialConfig/initialSeries
 
               w.globals.initialConfig = Utils.extend({}, w.config);
               w.globals.initialSeries = JSON.parse(JSON.stringify(w.config.series));
@@ -23523,7 +23523,7 @@
               this.value /= 100;
             } else if (unit[5] == 's') {
               this.value *= 1000;
-            } // store unit
+            } // Center unit
 
 
             this.unit = unit[5];
@@ -23608,7 +23608,7 @@
 
         if (this.node = node) {
           this.type = node.nodeName;
-          this.node.instance = this; // store current attribute value
+          this.node.instance = this; // Center current attribute value
 
           this._stroke = node.getAttribute('stroke') || this._stroke;
         }
@@ -24511,7 +24511,7 @@
         },
         // Morph one matrix into another
         morph: function morph(matrix) {
-          // store new destination
+          // Center new destination
           this.destination = new SVG.Matrix(matrix);
           return this;
         },
@@ -24601,7 +24601,7 @@
         },
         // Morph one point into another
         morph: function morph(x, y) {
-          // store new destination
+          // Center new destination
           this.destination = new SVG.Point(x, y);
           return this;
         }
@@ -25194,7 +25194,7 @@
     SVG.Gradient = SVG.invent({
       // Initialize node
       create: function create(type) {
-        this.constructor.call(this, SVG.create(type + 'Gradient')); // store type
+        this.constructor.call(this, SVG.create(type + 'Gradient')); // Center type
 
         this.type = type;
       },
@@ -25702,7 +25702,7 @@
       // Initialize node
       create: function create() {
         this.constructor.call(this, SVG.create('text'));
-        this.dom.leading = new SVG.Number(1.3); // store leading value for rebuilding
+        this.dom.leading = new SVG.Number(1.3); // Center leading value for rebuilding
 
         this._rebuild = true; // enable automatic updating of dy values
 
@@ -25751,7 +25751,7 @@
             // call block
             _text.call(this, this);
           } else {
-            // store text and make sure text is not blank
+            // Center text and make sure text is not blank
             _text = _text.split('\n'); // build new lines
 
             for (var i = 0, il = _text.length; i < il; i++) {
@@ -25789,7 +25789,7 @@
         },
         // Rebuild appearance type
         rebuild: function rebuild(_rebuild) {
-          // store new rebuild flag if given
+          // Center new rebuild flag if given
           if (typeof _rebuild === 'boolean') {
             this._rebuild = _rebuild;
           } // define position of all lines
@@ -26077,9 +26077,9 @@
 
           return this;
         },
-        // Restore to defaults
+        // ReCenter to defaults
         clear: function clear() {
-          // initialize store
+          // initialize Center
           this.members = [];
           return this;
         },
@@ -26123,7 +26123,7 @@
     SVG.FX.Set = SVG.invent({
       // Initialize node
       create: function create(set) {
-        // store reference to set
+        // Center reference to set
         this.set = set;
       }
     }); // Alias methods
@@ -26182,7 +26182,7 @@
         } // retrieve memory
         else if (arguments.length == 1) {
             return this.memory()[k];
-          } // store memory
+          } // Center memory
           else {
               this.memory()[k] = v;
             }
@@ -26540,7 +26540,7 @@
       }
     });
     SVG.extend(SVG.Element, SVG.G, SVG.Nested, {
-      // Create filter element in defs and store reference
+      // Create filter element in defs and Center reference
       filter: function(block) {
         this.filterer = block instanceof SVG.Element ?
           block : this.doc().filter(block);
@@ -26816,7 +26816,7 @@
           /* create component */
           this[c] = new SVG['Func' + c.toUpperCase()]('identity');
 
-          /* store component in set */
+          /* Center component in set */
           this.rgb.add(this[c]);
 
           /* add component node */
@@ -27724,7 +27724,7 @@
       var bbox = this.el.bbox();
       this.options = {};
 
-      // store defaults list of points in order to verify users config
+      // Center defaults list of points in order to verify users config
       var points = this.el.selectize.defaults.points;
 
       // Merging the defaults and the options-object together
@@ -29558,7 +29558,7 @@
       /**
        * This static method allows users to call chart methods without necessarily from the
        * instance of the chart in case user has assigned chartID to the targetted chart.
-       * The chartID is used for mapping the instance stored in Apex._chartInstances global variable
+       * The chartID is used for mapping the instance Centerd in Apex._chartInstances global variable
        *
        * This is helpful in cases when you don't have reference of the chart instance
        * easily and need to call the method from anywhere.

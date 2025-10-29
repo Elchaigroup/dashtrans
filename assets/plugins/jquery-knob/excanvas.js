@@ -322,7 +322,7 @@ if (!document.createElement('canvas').getContext) {
   };
 
   contextPrototype.beginPath = function() {
-    // TODO: Branch current matrix so that save/restore has no effect
+    // TODO: Branch current matrix so that save/reCenter has no effect
     //       as per safari docs.
     this.currentPath_ = [];
   };
@@ -792,7 +792,7 @@ if (!document.createElement('canvas').getContext) {
     this.m_ = matrixMultiply(createMatrixIdentity(), this.m_);
   };
 
-  contextPrototype.restore = function() {
+  contextPrototype.reCenter = function() {
     copyState(this.aStack_.pop(), this);
     this.m_ = this.mStack_.pop();
   };
