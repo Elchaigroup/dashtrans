@@ -144,7 +144,7 @@ $(function() {
 	new ApexCharts(document.querySelector("#chart2"), e).render();
 	e = {
 		series: [{
-			name: "Center Visitores",
+			name: "Usage",
 			data: [240, 160, 671, 414, 555, 257, 901, 613, 727, 414, 555, 257]
 		}],
 		chart: {
@@ -221,7 +221,7 @@ $(function() {
 			name: "Traffic",
 			data: [76, 85, 101, 98, 87, 105, 91, 114, 94]
 		}, {
-			name: "Center Visitores",
+			name: "Usage",
 			data: [35, 41, 36, 26, 45, 48, 52, 53, 41]
 		}],
 		chart: {
