@@ -4079,43 +4079,43 @@ input::placeholder {
 
 body.bg-theme1 {
 
-	background-image: url(../images/bg-themes/1.png);
+	background-image: linear-gradient(45deg, #1565C0, #1E88E5);
 
 }
 
 body.bg-theme2 {
 
-	background-image: url(../images/bg-themes/2.png);
+	background-image: linear-gradient(45deg, #1565C0, #1E88E5);
 
 }
 
 body.bg-theme3 {
 
-	background-image: url(../images/bg-themes/3.png);
+	background-image: linear-gradient(45deg, #1565C0, #1E88E5);
 
 }
 
 body.bg-theme4 {
 
-	background-image: url(../images/bg-themes/4.png);
+	background-image: linear-gradient(45deg, #1565C0, #1E88E5);
 
 }
 
 body.bg-theme5 {
 
-	background-image: url(../images/bg-themes/5.png);
+	background-image: linear-gradient(45deg, #1565C0, #1E88E5);
 
 }
 
 body.bg-theme6 {
 
-	background-image: url(../images/bg-themes/6.png);
+	background-image: linear-gradient(45deg, #1565C0, #1E88E5);
 
 }
 
 body.bg-theme7 {
 
-	background-image: linear-gradient(45deg, #0c675e, #069e90);
+	background-image: linear-gradient(45deg, #1565C0, #1E88E5);
 
 }
 
@@ -4129,14 +4129,14 @@ body.bg-theme8 {
 
 body.bg-theme9 {
 
-	/* background-image: linear-gradient(45deg, #29323c, #485563); */
 	background-image: linear-gradient(45deg, #1565C0, #1E88E5);
+	/* background-image: linear-gradient(45deg, #1565C0, #1E88E5); */
 
 }
 
 body.bg-theme10 {
 
-	background-image: linear-gradient(45deg, #795548, #945c48);
+	background-image: linear-gradient(45deg, #1565C0, #1E88E5);
 
 }
 
@@ -4148,20 +4148,20 @@ body.bg-theme11 {
 
 body.bg-theme12 {
 
-	background-image: linear-gradient(45deg, #65379b, #886aea);
+	background-image: linear-gradient(45deg, #1565C0, #1E88E5);
 
 }
 
 body.bg-theme13 {
-	background-image: linear-gradient(180deg, #ff5447, #f1076f);
+	background-image: linear-gradient(45deg, #1565C0, #1E88E5);
   }
 
 body.bg-theme14 {
-	background-image: linear-gradient(180deg, #08a50e, #69bb03);
+	background-image: linear-gradient(45deg, #1565C0, #1E88E5);
 }
 
 body.bg-theme15 {
-	background-image: linear-gradient(45deg, #6a11cb, #2575fc);
+	background-image: linear-gradient(45deg, #1565C0, #1E88E5);
   }
 
 
