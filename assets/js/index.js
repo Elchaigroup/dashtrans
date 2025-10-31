@@ -926,7 +926,7 @@ $(function() {
 	new ApexCharts(document.querySelector("#chart12"), e).render();
 	e = {
 		series: [{
-			name: "Pageviews",
+			name: "AI Processing",
 			data: [332, 540, 160, 240, 160, 671, 355, 671, 414, 555, 257, 901, 613]
 		}],
 		chart: {
@@ -1008,7 +1008,7 @@ $(function() {
 	new ApexCharts(document.querySelector("#chart13"), e).render();
 	e = {
 		series: [{
-			name: "New Sessions",
+			name: "Infrastructure Ready",
 			data: [332, 540, 160, 240, 160, 671, 355, 671, 414, 555, 257, 901, 613]
 		}],
 		chart: {

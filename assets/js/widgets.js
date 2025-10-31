@@ -236,7 +236,7 @@ $(function() {
 	new ApexCharts(document.querySelector("#w-chart3"), e).render();
 	e = {
 		series: [{
-			name: "Bounce Rate",
+			name: "GPU Utilization",
 			data: [240, 160, 671, 414, 555, 257, 901, 613, 727, 414, 555, 257]
 		}],
 		chart: {
