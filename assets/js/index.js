@@ -215,7 +215,7 @@ $(function() {
 	new ApexCharts(document.querySelector("#chart3"), e).render();
 	e = {
 		series: [{
-			name: "Total Sales",
+			name: "Total Infrastructure",
 			data: [44, 55, 57, 56, 61, 58, 63, 60, 66]
 		}, {
 			name: "Traffic",
@@ -1514,7 +1514,7 @@ $(function() {
 		stroke: {
 			dashArray: 4
 		},
-		labels: ["Total Sales"],
+		labels: ["Total Infrastructure"],
 		responsive: [{
 			breakpoint: 480,
 			options: {
